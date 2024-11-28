@@ -52,7 +52,7 @@ def objective(trial, X_train, y_train, X_val, y_val, task_type):
 
 
 def train_with_mlflow(
-    pipeline, X_train, y_train, X_val, y_val, params, task_type
+    pipeline, X_train, y_train, X_val, y_val, params, task_type, model_name
 ):
     mlflow.set_tracking_uri('file:///{}'.format(os.path.abspath('mlruns')))
 
@@ -68,17 +68,16 @@ def train_with_mlflow(
             mlflow.log_metric('rmse', score)
 
         mlflow.log_params(params)
-
         mlflow.sklearn.log_model(pipeline, "model")
-
-        mlflow.sklearn.save_model(pipeline, 'models/best_model')
+        model_path = f'models/{model_name}'
+        mlflow.sklearn.save_model(pipeline, model_path)
 
         print(f"Model Score: {score}")
 
 
 def run_pipeline(
     data_path, column_names, target_column,
-    task_type='classification', sep=','
+    task_type='classification', sep=',', model_name='best_model'
 ):
     data = load_data(data_path, column_names=column_names, sep=sep)
     data.replace('?', pd.NA, inplace=True)
@@ -110,5 +109,6 @@ def run_pipeline(
 
     train_with_mlflow(
         best_pipeline, X_train, y_train, X_val, y_val,
-        best_params, task_type
+        best_params, task_type, model_name
     )
+

@@ -87,7 +87,8 @@
 Запрос к API для получения предсказания POST /predict
 ```json
 {
-"features": [5.1, 3.5, 1.4, 0.2]
+  "features": [5.1, 3.5, 1.4, 0.2],
+  "model_name": "iris_model"
 }
 ```
 Ответ:
