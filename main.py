@@ -3,7 +3,7 @@ from src.pipeline import run_pipeline
 if __name__ == "__main__":
 
     # Пример для Iris датасета
-    data_path = 'data/iris.data'
+    data_path = 'data/iris/iris.data'
     column_names = [
         'sepal_length',
         'sepal_width',
@@ -18,49 +18,49 @@ if __name__ == "__main__":
 
     run_pipeline(
         data_path, column_names, target_column,
-        task_type=task_type, sep=sep
+        task_type=task_type, sep=sep, model_name=model_name, overwrite=True
     )
 
-    # Пример для Mushroom датасета
-    data_path = 'data/mushroom.data'
-    column_names = [
-        'class',
-        'cap-shape',
-        'cap-surface',
-        'cap-color',
-        'bruises',
-        'odor',
-        'gill-attachment',
-        'gill-spacing',
-        'gill-size',
-        'gill-color',
-        'stalk-shape',
-        'stalk-root',
-        'stalk-surface-above-ring',
-        'stalk-surface-below-ring',
-        'stalk-color-above-ring',
-        'stalk-color-below-ring',
-        'veil-type',
-        'veil-color',
-        'ring-number',
-        'ring-type',
-        'spore-print-color',
-        'population',
-        'habitat'
-    ]
-    target_column = 'class'
-    task_type = 'classification'
-    sep = ','
-    model_name = 'mushroom_model'
+    # # Пример для Mushroom датасета
+    # data_path = 'data/mushroom/mushroom.data'
+    # column_names = [
+    #     'class',
+    #     'cap-shape',
+    #     'cap-surface',
+    #     'cap-color',
+    #     'bruises',
+    #     'odor',
+    #     'gill-attachment',
+    #     'gill-spacing',
+    #     'gill-size',
+    #     'gill-color',
+    #     'stalk-shape',
+    #     'stalk-root',
+    #     'stalk-surface-above-ring',
+    #     'stalk-surface-below-ring',
+    #     'stalk-color-above-ring',
+    #     'stalk-color-below-ring',
+    #     'veil-type',
+    #     'veil-color',
+    #     'ring-number',
+    #     'ring-type',
+    #     'spore-print-color',
+    #     'population',
+    #     'habitat'
+    # ]
+    # target_column = 'class'
+    # task_type = 'classification'
+    # sep = ','
+    # model_name = 'mushroom_model'
     
 
-    run_pipeline(
-        data_path, column_names, target_column,
-        task_type=task_type, sep=sep
-    )
+    # run_pipeline(
+    #     data_path, column_names, target_column,
+    #     task_type=task_type, sep=sep, model_name=model_name
+    # )
 
     # Пример для Breast Cancer Wisconsin датасета
-    data_path = 'data/breast_cancer.data'
+    data_path = 'data/breast_cancer/wdbc.data'
     column_names = [
         'id',
         'diagnosis',
@@ -102,5 +102,5 @@ if __name__ == "__main__":
 
     run_pipeline(
         data_path, column_names, target_column,
-        task_type=task_type, sep=sep
+        task_type=task_type, sep=sep, model_name=model_name, overwrite=True
     )

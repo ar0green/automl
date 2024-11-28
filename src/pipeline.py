@@ -1,6 +1,8 @@
 import os
+import shutil
+import errno
 import pandas as pd
-from utils import load_data, preprocess_data
+from .utils import load_data, preprocess_data
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.pipeline import Pipeline
@@ -52,9 +54,10 @@ def objective(trial, X_train, y_train, X_val, y_val, task_type):
 
 
 def train_with_mlflow(
-    pipeline, X_train, y_train, X_val, y_val, params, task_type, model_name
+    pipeline, X_train, y_train, X_val, y_val, params, task_type, model_name, overwrtie
 ):
-    mlflow.set_tracking_uri('file:///{}'.format(os.path.abspath('mlruns')))
+    # mlflow.set_tracking_uri('file:///{}'.format(os.path.abspath('mlruns')))
+    mlflow.set_tracking_uri('http://localhost:5000')
 
     with mlflow.start_run():
         pipeline.fit(X_train, y_train)
@@ -69,7 +72,16 @@ def train_with_mlflow(
 
         mlflow.log_params(params)
         mlflow.sklearn.log_model(pipeline, "model")
+
         model_path = f'models/{model_name}'
+
+        if os.path.exists(model_path) and overwrtie:
+            try:
+                shutil.rmtree(model_path)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+
         mlflow.sklearn.save_model(pipeline, model_path)
 
         print(f"Model Score: {score}")
@@ -77,7 +89,7 @@ def train_with_mlflow(
 
 def run_pipeline(
     data_path, column_names, target_column,
-    task_type='classification', sep=',', model_name='best_model'
+    task_type='classification', sep=',', model_name='best_model', overwrite=False
 ):
     data = load_data(data_path, column_names=column_names, sep=sep)
     data.replace('?', pd.NA, inplace=True)
@@ -109,6 +121,5 @@ def run_pipeline(
 
     train_with_mlflow(
         best_pipeline, X_train, y_train, X_val, y_val,
-        best_params, task_type, model_name
+        best_params, task_type, model_name, overwrite
     )
-
