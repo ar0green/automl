@@ -54,10 +54,10 @@
 
     2. Запустите приложение FastAPI:
 
-    ```bash
-    uvicorn app:app --reload
-    ```
-    Приложение будет доступно по адресу http://localhost:8000.
+        ```bash
+        uvicorn app:app --reload
+        ```
+        Приложение будет доступно по адресу http://localhost:8000.
 
     3.Тестирование API:
 
@@ -69,7 +69,6 @@
 
         ```bash
         curl -X POST "http://localhost:8000/predict" -H "Content-Type: application/json" -d "{\"features\": [5.1, 3.5, 1.4, 0.2]}"
-
 ## **Развертывание с помощью Docker**
 
 1. Соберите Docker-образ:
@@ -85,11 +84,8 @@
 
 ### Примеры использования
 
-Запрос к API для получения предсказания
+Запрос к API для получения предсказания POST /predict
 ```json
-POST /predict
-Content-Type: application/json
-
 {
 "features": [5.1, 3.5, 1.4, 0.2]
 }
