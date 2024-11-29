@@ -7,17 +7,14 @@ import os
 
 app = FastAPI(title="AutoML API")
 
-
 class InputData(BaseModel):
     features: list
-    model_name: str = Query(
-        'iris_model', description="Имя модели для предсказания")
-
+    model_name: str = Query(..., description="Имя модели для предсказания")
+    task_type: str = Query('classification', description="Тип задачи: classification или regression")
 
 @app.get("/")
 def read_root():
     return {"message": "AutoML API is up and running!"}
-
 
 @app.post("/predict")
 def predict(data: InputData):
@@ -29,8 +26,13 @@ def predict(data: InputData):
 
     input_array = np.array(data.features).reshape(1, -1)
     prediction = model.predict(input_array)
-    return {"prediction": prediction.tolist()}
 
+    if data.task_type == 'classification':
+        prediction = prediction.astype(int).tolist()
+    else:
+        prediction = prediction.tolist()
+
+    return {"prediction": prediction}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,15 +1,23 @@
+# pipeline.py
+
 import os
 import shutil
 import errno
 import pandas as pd
-from .utils import load_data, preprocess_data
-from sklearn.metrics import accuracy_score, mean_squared_error
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from .utils import load_data, preprocess_data, get_models
+from sklearn.metrics import (
+    accuracy_score, mean_squared_error, precision_score,
+    recall_score, f1_score, r2_score
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
 import optuna
 import mlflow
 import mlflow.sklearn
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import numpy as np
 
 
 def create_pipeline(model):
@@ -20,43 +28,61 @@ def create_pipeline(model):
     return pipeline
 
 
-def objective(trial, X_train, y_train, X_val, y_val, task_type):
-    n_estimators = trial.suggest_int('n_estimators', 50, 200)
-    max_depth = trial.suggest_int('max_depth', 3, 20)
-    max_features = trial.suggest_categorical(
-        'max_features', [None, 'sqrt', 'log2'])
-
-    if task_type == 'classification':
-        model = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            max_features=max_features,
-            random_state=42
-        )
+def get_hyperparameters(model_name, trial, task_type):
+    params = {}
+    if model_name == 'Random Forest':
+        params = {
+            'n_estimators': trial.suggest_int('n_estimators', 50, 200),
+            'max_depth': trial.suggest_int('max_depth', 3, 20),
+            'max_features': trial.suggest_categorical('max_features', [None, 'sqrt', 'log2'])
+        }
+    elif model_name == 'Logistic Regression':
+        params = {
+            'C': trial.suggest_loguniform('C', 1e-4, 1e2)
+        }
+    elif model_name == 'Linear Regression':
+        params = {}
+    elif model_name == 'XGBoost':
+        params = {
+            'n_estimators': trial.suggest_int('n_estimators', 50, 200),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3),
+            'max_depth': trial.suggest_int('max_depth', 3, 20)
+        }
+    elif model_name == 'LightGBM':
+        params = {
+            'n_estimators': trial.suggest_int('n_estimators', 50, 200),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3),
+            'num_leaves': trial.suggest_int('num_leaves', 20, 150)
+        }
     else:
-        model = RandomForestRegressor(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            max_features=max_features,
-            random_state=42
-        )
+        raise ValueError(f"Модель {model_name} не поддерживается.")
+    return params
 
+
+def objective(trial, model_name, base_model, X_train, y_train, task_type):
+    params = get_hyperparameters(model_name, trial, task_type)
+    model = base_model.set_params(**params)
     pipeline = create_pipeline(model)
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_val)
 
     if task_type == 'classification':
-        score = accuracy_score(y_val, y_pred)
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        scoring = 'accuracy'
     else:
-        score = mean_squared_error(y_val, y_pred, squared=False)  # RMSE
+        cv = KFold(n_splits=5, shuffle=True, random_state=42)
+        scoring = 'neg_root_mean_squared_error'
 
-    return score
+    scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
+    mean_score = scores.mean()
+
+    if task_type == 'classification':
+        return -mean_score
+    else:
+        return mean_score
 
 
 def train_with_mlflow(
-    pipeline, X_train, y_train, X_val, y_val, params, task_type, model_name, overwrtie
+    pipeline, X_train, y_train, X_val, y_val, params, task_type, model_name, dataset_name
 ):
-    # mlflow.set_tracking_uri('file:///{}'.format(os.path.abspath('mlruns')))
     mlflow.set_tracking_uri('http://localhost:5000')
 
     with mlflow.start_run():
@@ -64,18 +90,52 @@ def train_with_mlflow(
         y_pred = pipeline.predict(X_val)
 
         if task_type == 'classification':
-            score = accuracy_score(y_val, y_pred)
-            mlflow.log_metric('accuracy', score)
+            accuracy = accuracy_score(y_val, y_pred)
+            precision = precision_score(y_val, y_pred, average='weighted', zero_division=0)
+            recall = recall_score(y_val, y_pred, average='weighted', zero_division=0)
+            f1 = f1_score(y_val, y_pred, average='weighted', zero_division=0)
+
+            mlflow.log_metric('accuracy', accuracy)
+            mlflow.log_metric('precision', precision)
+            mlflow.log_metric('recall', recall)
+            mlflow.log_metric('f1_score', f1)
+
+            cm = confusion_matrix(y_val, y_pred)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+            disp.plot()
+            plt.title(f'Confusion Matrix - {model_name}')
+            cm_filename = f'confusion_matrix_{dataset_name}_{model_name}.png'
+            plt.savefig(cm_filename)
+            plt.close()
+            mlflow.log_artifact(cm_filename)
+            os.remove(cm_filename)
+
         else:
-            score = mean_squared_error(y_val, y_pred, squared=False)
-            mlflow.log_metric('rmse', score)
+            rmse = mean_squared_error(y_val, y_pred, squared=False)
+            r2 = r2_score(y_val, y_pred)
+
+            mlflow.log_metric('rmse', rmse)
+            mlflow.log_metric('r2_score', r2)
 
         mlflow.log_params(params)
+        mlflow.log_param('model_name', model_name)
+        mlflow.log_param('dataset_name', dataset_name)
+
+        if hasattr(pipeline.named_steps['model'], 'feature_importances_'):
+            importances = pipeline.named_steps['model'].feature_importances_
+            feature_names = X_train.columns
+            importance_df = pd.DataFrame({'feature': feature_names, 'importance': importances})
+            importance_df = importance_df.sort_values(by='importance', ascending=False)
+            importance_filename = f'feature_importances_{dataset_name}_{model_name}.csv'
+            importance_df.to_csv(importance_filename, index=False)
+            mlflow.log_artifact(importance_filename)
+            os.remove(importance_filename)
+
         mlflow.sklearn.log_model(pipeline, "model")
 
-        model_path = f'models/{model_name}'
+        model_path = f'models/{dataset_name}_{model_name}'
 
-        if os.path.exists(model_path) and overwrtie:
+        if os.path.exists(model_path):
             try:
                 shutil.rmtree(model_path)
             except OSError as e:
@@ -84,12 +144,12 @@ def train_with_mlflow(
 
         mlflow.sklearn.save_model(pipeline, model_path)
 
-        print(f"Model Score: {score}")
+        print(f"Model: {model_name}, saved at {model_path}")
 
 
 def run_pipeline(
     data_path, column_names, target_column,
-    task_type='classification', sep=',', model_name='best_model', overwrite=False
+    task_type='classification', sep=',', dataset_name='dataset'
 ):
     data = load_data(data_path, column_names=column_names, sep=sep)
     data.replace('?', pd.NA, inplace=True)
@@ -97,29 +157,76 @@ def run_pipeline(
 
     X_train, X_val, y_train, y_val = preprocess_data(data, target_column)
 
-    direction = 'maximize' if task_type == 'classification' else 'minimize'
+    models = get_models(task_type)
+
+    model_scores = {}
+    for model_name, base_model in models.items():
+        print(f"Evaluating {model_name}...")
+        pipeline = create_pipeline(base_model)
+
+        if task_type == 'classification':
+            cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+            scoring = 'accuracy'
+        else:
+            cv = KFold(n_splits=5, shuffle=True, random_state=42)
+            scoring = 'neg_root_mean_squared_error'
+
+        scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1)
+        mean_score = scores.mean()
+        model_scores[model_name] = mean_score
+        print(f"{model_name} CV Score: {mean_score}")
+
+    if task_type == 'classification':
+        best_model_name = max(model_scores, key=model_scores.get)
+    else:
+        best_model_name = min(model_scores, key=model_scores.get)
+
+    print(f"Best model: {best_model_name}")
+
+    best_base_model = models[best_model_name]
+
+    print(f"Optimizing hyperparameters for {best_model_name}...")
+
+    if task_type == 'classification':
+        direction = 'minimize'
+    else:
+        direction = 'minimize'
+
     study = optuna.create_study(direction=direction)
     study.optimize(
         lambda trial: objective(
-            trial, X_train, y_train, X_val, y_val, task_type
+            trial, best_model_name, best_base_model, X_train, y_train, task_type
         ),
         n_trials=50
     )
 
     best_params = study.best_params
 
-    if task_type == 'classification':
-        best_model = RandomForestClassifier(
-            **best_params, random_state=42
-        )
-    else:
-        best_model = RandomForestRegressor(
-            **best_params, random_state=42
-        )
+    best_model = best_base_model.set_params(**best_params)
 
     best_pipeline = create_pipeline(best_model)
 
+    best_pipeline.fit(X_train, y_train)
+
+    y_pred = best_pipeline.predict(X_val)
+
+    if task_type == 'classification':
+        accuracy = accuracy_score(y_val, y_pred)
+        precision = precision_score(y_val, y_pred, average='weighted', zero_division=0)
+        recall = recall_score(y_val, y_pred, average='weighted', zero_division=0)
+        f1 = f1_score(y_val, y_pred, average='weighted', zero_division=0)
+        print(f"Validation Accuracy: {accuracy}")
+        print(f"Validation Precision: {precision}")
+        print(f"Validation Recall: {recall}")
+        print(f"Validation F1 Score: {f1}")
+    else:
+        rmse = mean_squared_error(y_val, y_pred, squared=False)
+        r2 = r2_score(y_val, y_pred)
+        print(f"Validation RMSE: {rmse}")
+        print(f"Validation R2 Score: {r2}")
+
+    # Логирование с помощью MLflow
     train_with_mlflow(
         best_pipeline, X_train, y_train, X_val, y_val,
-        best_params, task_type, model_name, overwrite
+        best_params, task_type, best_model_name, dataset_name
     )

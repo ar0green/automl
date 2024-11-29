@@ -2,7 +2,6 @@ from src.pipeline import run_pipeline
 
 if __name__ == "__main__":
 
-    # Пример для Iris датасета
     data_path = 'data/iris/iris.data'
     column_names = [
         'sepal_length',
@@ -14,11 +13,11 @@ if __name__ == "__main__":
     target_column = 'species'
     task_type = 'classification'
     sep = ','
-    model_name = 'iris_model'
+    dataset_name = 'iris'
 
     run_pipeline(
         data_path, column_names, target_column,
-        task_type=task_type, sep=sep, model_name=model_name, overwrite=True
+        task_type=task_type, sep=sep, dataset_name=dataset_name,
     )
 
     # # Пример для Mushroom датасета
@@ -51,15 +50,13 @@ if __name__ == "__main__":
     # target_column = 'class'
     # task_type = 'classification'
     # sep = ','
-    # model_name = 'mushroom_model'
-    
+    # dataset_name = 'mushroom'
 
     # run_pipeline(
     #     data_path, column_names, target_column,
-    #     task_type=task_type, sep=sep, model_name=model_name
+    #     task_type=task_type, sep=sep, dataset_name=dataset_name
     # )
 
-    # Пример для Breast Cancer Wisconsin датасета
     data_path = 'data/breast_cancer/wdbc.data'
     column_names = [
         'id',
@@ -98,9 +95,21 @@ if __name__ == "__main__":
     target_column = 'diagnosis'
     task_type = 'classification'
     sep = ','
-    model_name = 'breast_cancer_model'
+    dataset_name = 'breast_cancer_model'
 
     run_pipeline(
         data_path, column_names, target_column,
-        task_type=task_type, sep=sep, model_name=model_name, overwrite=True
+        task_type=task_type, sep=sep, dataset_name=dataset_name
+    )
+
+    data_path = 'data/boston.csv'
+    column_names = None
+    target_column = 'medv'
+    task_type = 'regression'
+    sep = ','
+    dataset_name = 'boston_housing'
+
+    run_pipeline(
+        data_path, column_names, target_column,
+        task_type=task_type, sep=sep, dataset_name=dataset_name
     )
