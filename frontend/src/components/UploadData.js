@@ -11,7 +11,7 @@ function UploadData({ setFileId }) {
     const data = new FormData();
     data.append('file', selectedFile);
 
-    axios.post('/upload_data', data)
+    axios.post('/api/upload_data', data)
       .then(response => {
         setFileId(response.data.file_id);
         alert('File uploaded successfully!');

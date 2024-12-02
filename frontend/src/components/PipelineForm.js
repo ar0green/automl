@@ -14,7 +14,7 @@ function PipelineForm({ fileId, setTaskId, setReportId  }) {
 
     const runPipeline = () => {
         axios
-            .post(`/run_pipeline/${fileId}`, params)
+            .post(`/api/run_pipeline/${fileId}`, params)
             .then((response) => {
                 setTaskId(response.data.task_id);
                 setReportId(response.data.report_id); // Добавлено

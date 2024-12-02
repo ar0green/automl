@@ -7,7 +7,7 @@ function DownloadReport({ reportId }) {
   const [reportFilename, setReportFilename] = useState('');
 
   const downloadReport = () => {
-    window.location.href = `/download_report/${reportId}/${reportFilename}`;
+    window.location.href = `/api/download_report/${reportId}/${reportFilename}`;
   };
 
   return (

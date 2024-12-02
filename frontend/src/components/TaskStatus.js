@@ -9,7 +9,7 @@ function TaskStatus({ taskId }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      axios.get(`/task_status/${taskId}`)
+      axios.get(`/api/task_status/${taskId}`)
         .then(response => {
           setStatus(response.data.status);
         })
