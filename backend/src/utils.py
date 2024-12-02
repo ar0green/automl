@@ -18,8 +18,6 @@ def load_data(file_path, column_names=None, sep=','):
     return data
 
 
-
-
 def preprocess_data(data, target_column):
     X = data.drop(target_column, axis=1)
     y = data[target_column]

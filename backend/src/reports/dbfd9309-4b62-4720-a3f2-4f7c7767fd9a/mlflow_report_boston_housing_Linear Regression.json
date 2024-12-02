@@ -1,0 +1,19 @@
+{
+    "run_id": "2f1b8182936b413cb8fa29bae9a6a1e3",
+    "metrics": {
+        "rmse": 4.928602182665336,
+        "r2_score": 0.668759493535632
+    },
+    "params": {
+        "model_name": "Linear Regression",
+        "dataset_name": "boston_housing"
+    },
+    "tags": {
+        "mlflow.user": "Alex",
+        "mlflow.source.name": "c:/Users/Alex/YandexDisk/\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u041f\u041a/Work_SELFv1/pet_projects/automl/main.py",
+        "mlflow.source.type": "LOCAL",
+        "mlflow.source.git.commit": "8bf8231c045ccb66472327adaec4b7f58e1221ad",
+        "mlflow.runName": "monumental-sheep-858",
+        "mlflow.log-model.history": "[{\"run_id\": \"2f1b8182936b413cb8fa29bae9a6a1e3\", \"artifact_path\": \"model\", \"utc_time_created\": \"2024-12-02 11:10:45.037346\", \"model_uuid\": \"3d14222169fe47bb8c21079cdfe00259\", \"flavors\": {\"python_function\": {\"model_path\": \"model.pkl\", \"predict_fn\": \"predict\", \"loader_module\": \"mlflow.sklearn\", \"python_version\": \"3.12.5\", \"env\": {\"conda\": \"conda.yaml\", \"virtualenv\": \"python_env.yaml\"}}, \"sklearn\": {\"pickled_model\": \"model.pkl\", \"sklearn_version\": \"1.5.2\", \"serialization_format\": \"cloudpickle\", \"code\": null}}}]"
+    }
+}

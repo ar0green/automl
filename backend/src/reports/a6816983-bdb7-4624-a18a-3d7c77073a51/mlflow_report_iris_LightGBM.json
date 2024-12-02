@@ -1,0 +1,24 @@
+{
+    "run_id": "24aee6e5b25942319cd217d1b55fe054",
+    "metrics": {
+        "accuracy": 0.9,
+        "precision": 0.9214285714285714,
+        "recall": 0.9,
+        "f1_score": 0.896
+    },
+    "params": {
+        "n_estimators": "164",
+        "learning_rate": "0.07888543351163804",
+        "num_leaves": "145",
+        "model_name": "LightGBM",
+        "dataset_name": "iris"
+    },
+    "tags": {
+        "mlflow.user": "Alex",
+        "mlflow.source.name": "c:/Users/Alex/YandexDisk/\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u041f\u041a/Work_SELFv1/pet_projects/automl/main.py",
+        "mlflow.source.type": "LOCAL",
+        "mlflow.source.git.commit": "8bf8231c045ccb66472327adaec4b7f58e1221ad",
+        "mlflow.runName": "auspicious-sheep-647",
+        "mlflow.log-model.history": "[{\"run_id\": \"24aee6e5b25942319cd217d1b55fe054\", \"artifact_path\": \"model\", \"utc_time_created\": \"2024-12-02 11:10:34.535323\", \"model_uuid\": \"35049316db254d65a0acfd81e3e7d5d2\", \"flavors\": {\"python_function\": {\"model_path\": \"model.pkl\", \"predict_fn\": \"predict\", \"loader_module\": \"mlflow.sklearn\", \"python_version\": \"3.12.5\", \"env\": {\"conda\": \"conda.yaml\", \"virtualenv\": \"python_env.yaml\"}}, \"sklearn\": {\"pickled_model\": \"model.pkl\", \"sklearn_version\": \"1.5.2\", \"serialization_format\": \"cloudpickle\", \"code\": null}}}]"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "run_id": "eb57a8e233474298890b69ba78472c41",
+    "metrics": {
+        "accuracy": 0.9649122807017544,
+        "precision": 0.9652654363180679,
+        "recall": 0.9649122807017544,
+        "f1_score": 0.9647766759894906
+    },
+    "params": {
+        "C": "0.2514803430827464",
+        "model_name": "Logistic Regression",
+        "dataset_name": "breast_cancer_model"
+    },
+    "tags": {
+        "mlflow.user": "Alex",
+        "mlflow.source.name": "c:/Users/Alex/YandexDisk/\u041e\u0441\u043d\u043e\u0432\u043d\u043e\u0439 \u041f\u041a/Work_SELFv1/pet_projects/automl/main.py",
+        "mlflow.source.type": "LOCAL",
+        "mlflow.source.git.commit": "8bf8231c045ccb66472327adaec4b7f58e1221ad",
+        "mlflow.runName": "placid-lark-29",
+        "mlflow.log-model.history": "[{\"run_id\": \"eb57a8e233474298890b69ba78472c41\", \"artifact_path\": \"model\", \"utc_time_created\": \"2024-12-02 11:10:40.502695\", \"model_uuid\": \"c5e09e9ad67c481fa3796b2404d8109d\", \"flavors\": {\"python_function\": {\"model_path\": \"model.pkl\", \"predict_fn\": \"predict\", \"loader_module\": \"mlflow.sklearn\", \"python_version\": \"3.12.5\", \"env\": {\"conda\": \"conda.yaml\", \"virtualenv\": \"python_env.yaml\"}}, \"sklearn\": {\"pickled_model\": \"model.pkl\", \"sklearn_version\": \"1.5.2\", \"serialization_format\": \"cloudpickle\", \"code\": null}}}]"
+    }
+}
