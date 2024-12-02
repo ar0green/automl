@@ -16,6 +16,8 @@ services:
     build: ./frontend
     ports:
       - "3000:80"
+    depends_on:
+      - backend
     networks:
       - app-network
 
@@ -27,6 +29,20 @@ services:
       - ./backend/mlflow.db:/mlflow/mlflow.db
     ports:
       - "5000:5000"
+    networks:
+      - app-network
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass123
+      POSTGRES_DB: automl
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     networks:
       - app-network
 

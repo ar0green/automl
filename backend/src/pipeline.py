@@ -24,6 +24,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import json
 import uuid
+from .models import Report
 
 
 def create_pipeline(model):
@@ -110,8 +111,9 @@ def train_with_mlflow(
     model_name,
     dataset_name,
     report_id,
+    db
 ):
-    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_tracking_uri("http://mlflow:5000")
 
     with mlflow.start_run() as run:
         run_id = run.info.run_id
@@ -178,27 +180,17 @@ def train_with_mlflow(
         mlflow.sklearn.save_model(pipeline, model_path)
 
         print(f"Model: {model_name}, saved at {model_path}")
-        mlflow_report_filename = f"mlflow_report_{dataset_name}_{model_name}.json"
-        save_mlflow_metrics(run_id, mlflow_report_filename, report_id)
+        mlflow_report_data = {
+        'run_id': run_id,
+        'metrics': mlflow.tracking.MlflowClient().get_run(run_id).data.metrics,
+        'params': mlflow.tracking.MlflowClient().get_run(run_id).data.params,
+        'tags': mlflow.tracking.MlflowClient().get_run(run_id).data.tags
+        }
 
-
-def save_mlflow_metrics(run_id, filename, report_id):
-    client = mlflow.tracking.MlflowClient()
-    data = client.get_run(run_id).data
-
-    metrics = data.metrics
-    params = data.params
-    tags = data.tags
-
-    mlflow_report = {
-        "run_id": run_id,
-        "metrics": metrics,
-        "params": params,
-        "tags": tags,
-    }
-
-    save_report(report_id, mlflow_report, filename)
-    print(f"MLflow report saved to {filename}")
+        report_entry = db.query(Report).filter(Report.report_id == report_id).first()
+        if report_entry:
+            report_entry.mlflow_data = mlflow_report_data
+            db.commit()
 
 
 def run_pipeline(
@@ -209,6 +201,7 @@ def run_pipeline(
     sep=",",
     dataset_name="dataset",
     report_id=None,
+    db=None
 ):
     if report_id is None:
         report_id = str(uuid.uuid4())
@@ -303,9 +296,12 @@ def run_pipeline(
 
         report["validation_metrics"] = {"rmse": rmse, "r2_score": r2}
 
-    report_filename = f"report_{dataset_name}_{best_model_name}.json"
-    save_report(report_id, report, report_filename)
-    print(f"Report saved to {report_filename}")
+    report_entry = db.query(Report).filter(Report.report_id == report_id).first()
+    if report_entry:
+        report_entry.dataset_name = dataset_name
+        report_entry.model_name = best_model_name
+        report_entry.report_data = report
+        db.commit()
 
     train_with_mlflow(
         best_pipeline,
@@ -318,4 +314,5 @@ def run_pipeline(
         best_model_name,
         dataset_name,
         report_id,
+        db
     )

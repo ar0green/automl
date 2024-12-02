@@ -6,3 +6,8 @@ models/
 mlflow.db
 backend/data/0825320f-f111-41c2-aecd-236836eb7e2a_boston.csv
 backend/src/reports/1786597f-5572-4afb-86c9-041f5d11899d/report_boston_housing_Linear Regression.json
+backend/data/
+!backend/data/iris
+!backend/data/boston.csv
+!backend/data/breast_cancer
+!backend/data/mushroom

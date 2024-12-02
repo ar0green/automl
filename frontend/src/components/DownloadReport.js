@@ -1,27 +1,32 @@
-// src/components/DownloadReport.js
+// DownloadReport.js
 
 import React, { useState } from 'react';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField, Typography } from '@material-ui/core';
+import axios from 'axios';
 
 function DownloadReport({ reportId }) {
-  const [reportFilename, setReportFilename] = useState('');
+  const [reportData, setReportData] = useState(null);
 
-  const downloadReport = () => {
-    window.location.href = `/api/download_report/${reportId}/${reportFilename}`;
+  const getReport = () => {
+    axios.get(`/api/download_report/${reportId}`)
+      .then(response => {
+        setReportData(response.data);
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Failed to get report.');
+      });
   };
 
   return (
     <div>
-      <TextField
-        label="Report Filename"
-        value={reportFilename}
-        onChange={e => setReportFilename(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
-      <Button variant="contained" color="primary" onClick={downloadReport}>
-        Download Report
+      <Typography variant="h6">Report</Typography>
+      <Button variant="contained" color="primary" onClick={getReport}>
+        Get Report
       </Button>
+      {reportData && (
+        <pre>{JSON.stringify(reportData, null, 2)}</pre>
+      )}
     </div>
   );
 }
