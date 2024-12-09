@@ -1,5 +1,4 @@
-// src/components/UploadData.js
-
+// UploadData.js
 import React, { useState } from 'react';
 import { Button, Typography } from '@material-ui/core';
 import axios from 'axios';
@@ -13,8 +12,12 @@ function UploadData({ setFileId }) {
 
     axios.post('/api/upload_data', data)
       .then(response => {
-        setFileId(response.data.file_id);
-        alert('File uploaded successfully!');
+        if (response.data && response.data.file_id) {
+          setFileId(response.data.file_id);
+          alert('File uploaded successfully!');
+        } else {
+          alert('File uploaded, but no file_id returned from server.');
+        }
       })
       .catch(error => {
         console.error(error);
@@ -29,7 +32,7 @@ function UploadData({ setFileId }) {
         type="file"
         onChange={e => setSelectedFile(e.target.files[0])}
       />
-      <Button variant="contained" color="primary" onClick={uploadFile}>
+      <Button variant="contained" color="primary" onClick={uploadFile} disabled={!selectedFile}>
         Upload
       </Button>
     </div>
