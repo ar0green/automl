@@ -1,128 +1,140 @@
 # AutoMLPipeline
 
-Этот маленький пет-проект представляет собой AutoML-пайплайн для задач классификации и регрессии. Он автоматически выбирает лучшие модели и гиперпараметры с использованием `Optuna`, логирует эксперименты с помощью `MLflow` и "предоставляет" API для дальнейшего использования в продуктиве через `FastAPI`.
+This project is an auto-ML platform for automating the training and application of ML models to user-uploaded datasets. It provides:
 
-## **Возможности**
+- Web interface (React + Material UI) for uploading data, configuring pipelines, viewing statuses and reports, and applying trained models.
+- Backend (FastAPI + PostgreSQL + MLflow) for data management, pipeline execution, experiment logging, storing, and retrieving reports.
+- Containerization (Docker, Docker Compose) for easy deployment and running of the project.
 
-- Поддержка моделей: Random Forest, XGBoost, LightGBM, LogReg, LinReg
-- Автоматическая оптимизация гиперпараметров
-- Поддержка задач классификации и регрессии
-- Логирование экспериментов с помощью MLflow
-- REST API для использования модели
-- "Гибкая" предобработка данных
+## **Features**
 
-## **Установка**
-
-1. **Клонируйте репозиторий:**
-
-   ```bash
-   git clone https://github.com/yourusername/AutoMLPipeline.git
-   cd AutoMLPipeline
-   ```
-
-2. **Создайте виртуальное окружение и активируйте его**:
-
-    Для Linux/Mac
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
-    Для Windows
-    ```bash
-    python -m venv venv
-    venv\Scripts\activate   
-    ```
-3. **Установите зависимости:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## **Использование**
-
-1. **Обучение модели**
+1. Data Upload:
     
-    Перед стартом для удобства и для избежания ошибок можно запустить mlflow сервер:
-    ```bash
-    mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
-    ```
-    И теперь можно будет отслеживать процесс обучения через http://localhost:5000
+    Users can upload their datasets (e.g., CSV files) through the web interface. The files are stored on the server and registered in the system.
 
-    1. Поместите ваши датасеты в папку data/.
-    2. Обновите main.py с информацией о вашем датасете:
-        - Путь к файлу данных
-        - Названия столбцов
-        - Название целевой переменной
-        - Тип задачи (classification или regression)
-        - Разделитель в файле данных
-    3. Запустите обучение:
-        ```bash
-        python main.py
-        ```
-
-    TODO: запуск через pipeline.py, запуск обучения через интерфейс REST API
-2. **Запуск REST API**
+2. Dataset Selection & Configuration:
     
-    1. Проверьте, что после обучения - модель сохранена в папке models/{dataset_name}_{model_name}/.
+    On the "Configure Pipeline" page, users can select one of the uploaded datasets from a list, retrieve its columns, and configure the pipeline parameters such as target column, task type (classification or regression), model choice (Random Forest, Logistic Regression, XGBoost, LightGBM), dataset name, and separators.
 
-    2. Запустите приложение FastAPI:
+3. Pipeline Execution:
+    
+    After configuration, the user can run an auto-ML pipeline that trains a model based on the selected parameters. The pipeline logs experiments and results in MLflow.
 
-        ```bash
-        # проверьте, что вы в корневой директории проекта
-        uvicorn app:app --reload
-        ```
-        После запуска "приложение" будет доступно по адресу http://localhost:8000.
+4. Status Monitoring:
 
-    3.Тестирование API:
+    The "Pipelines Status" page shows all running or completed pipelines, including their task_id, report_id, status, dataset name, and model name. Users can also view the corresponding reports directly from this page.
 
-    - Через браузер:
-        
-        Перейдите по адресу http://localhost:8000/docs, чтобы открыть автоматически сгенерированную документацию Swagger UI.
+5. Report Viewing:  
+    
+    Once training is complete, users can retrieve a report (in JSON format) that includes performance metrics, model parameters, and experiment logs.
 
-    - Через терминал:
+6. Model Application:
+    
+    A dedicated page allows users to upload new data and apply a previously trained model to generate predictions.
 
-        ```bash
-        curl -X POST "http://localhost:8000/predict" -H "Content-Type: application/json" -d "{\"features\": [5.1, 3.5, 1.4, 0.2]}"
-        ```
-    - Через обычный REST запрос:
+## **Project Structure**
+```grapql
+AutoMLPipeline/
+├─ backend/
+│  ├─ Dockerfile
+│  ├─ requirements.txt
+│  ├─ app.py                  # FastAPI entry point
+│  ├─ src/
+│  │  ├─ pipeline.py          # Pipeline launch and training logic
+│  │  ├─ utils.py             # Utility functions
+│  │  ├─ models.py            # SQLAlchemy models
+│  │  ├─ database.py          # DB connection
+│  │  ├─ reports/             # directory for reports if needed
+│  ├─ data/                   # Directory for uploaded datasets
+│  ├─ models/                 # Directory for saved models if needed
+│  ├─ mlruns/                 # MLflow artifacts
+│  ├─ mlflow.db               # SQLite database for MLflow
+│  └─ ...
+├─ frontend/
+│  ├─ Dockerfile
+│  ├─ src/
+│  │  ├─ components/
+│  │  │  ├─ UploadData.js
+│  │  │  ├─ PipelineForm.js
+│  │  │  ├─ TaskStatus.js
+│  │  │  ├─ DownloadReport.js
+│  │  │  ├─ ApplyModel.js
+│  │  │  ├─ StatusPipeline.js
+│  │  ├─ App.js
+│  │  ├─ index.js
+│  ├─ public/
+│  ├─ package.json
+│  └─ ...
+├─ docker-compose.yml
+└─ README.md
 
-        POST /predict
-        ```json
-        {
-        "features": [5.1, 3.5, 1.4, 0.2],
-        "model_name": "iris_model"
-        }
-        ```
-
-## **Развертывание с помощью Docker**
-
-1. Docker-образ:
-
-    ```bash
-    docker build -t automl-api .
-    ```
-
-2. Запустите контейнер:
-
-    ```bash
-    docker run -d -p 8000:8000 automl-api
-    ```
-
-    Теперь API доступен по адресу http://localhost:8000.
-
-### Примеры использования
-
-Запрос к API для получения предсказания POST /predict
-```json
-{
-  "features": [5.1, 3.5, 1.4, 0.2],
-  "model_name": "iris_model"
-}
 ```
 
-Ответ:
+## **Prerequisites**
 
-```json
-{
-"prediction": [0]
-}
+- Docker and Docker Compose installed on your machine.
+- Sufficient memory and CPU for building and running the containers (recommended at least 4GB RAM).
+
+## **Installation and Launch**
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/ar0green/AutoMLPipeline.git
+    cd AutoMLPipeline
+   ```
+
+2. **Build and start containers:**
+
+    ```bash
+    docker-compose up --build 
+    ```
+
+    This will start the following services:
+
+        backend on port 8000
+        frontend on port 3000
+        mlflow on port 5000
+        db (PostgreSQL) on port 5432
+
+3. **Open the web interface:**
+    
+    Go to http://localhost:3000 in your browser.
+
+## **UI Pages**
+
+- Upload Data: Upload a new dataset.
+- Configure Pipeline: Select a dataset, choose target column, model, etc., and run the pipeline.
+- View Reports: View previously generated reports (JSON format).
+- Models → Apply Model: Apply a trained model to new data.
+- Pipelines Status: Monitor the status of all pipelines and view their reports.
+
+## **UI Pages**
+
+- **/api/upload_data(POST)**: Upload a dataset.
+- **/api/list_datasets (GET)**: List all uploaded datasets.
+- **/api/get_dataset_info?file_id={file_id} (GET)**: Retrieve dataset columns.
+- **/api/run_pipeline/{file_id} (POST)**: Run the pipeline for the specified dataset.
+- **/api/task_status/{task_id} (GET)**: Get the status of a specific pipeline.
+- **/api/download_report/{report_id} (GET)**: Retrieve the report for a completed pipeline.
+- **/api/list_pipelines (GET)**: List all pipelines and their statuses.
+
+## **Database**
+
+- PostgreSQL is used for storing pipeline metadata and reports.
+- SQLAlchemy and Alembic for schema management and migrations.
+- Reports and statuses are stored in the database for easy retrieval.
+
+## **Example Workflow**
+
+1. Upload Data: Go to "Upload Data" and upload a CSV file.
+2. Configure Pipeline: Go to "Configure Pipeline," select the uploaded dataset, choose the target column and model, and run the pipeline.
+3. Monitor Status: Go to "Pipelines Status" to see if the pipeline has completed. View the report once it’s done.
+4. Apply Model: If you need to apply the trained model to new data, go to "Apply Model" and upload another dataset.
+
+## **MLflow Integration**
+
+- MLflow UI is available at http://localhost:5000.
+- MLflow logs parameters, metrics, and models for each pipeline run.
+- You can view, compare, and track experiments and model versions.
+

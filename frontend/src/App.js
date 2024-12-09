@@ -6,7 +6,8 @@ import UploadData from './components/UploadData';
 import PipelineForm from './components/PipelineForm';
 import TaskStatus from './components/TaskStatus';
 import DownloadReport from './components/DownloadReport';
-import ApplyModel from './components/ApplyModel'; // Допустим, мы создали этот компонент
+import ApplyModel from './components/ApplyModel';
+import StatusPipeline from './components/StatusPipeline';
 
 function App() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,6 +42,9 @@ function App() {
           <Button color="inherit" onClick={() => navigateTo('pipeline')}>
             Configure Pipeline
           </Button>
+          <Button color="inherit" onClick={() => navigateTo('statuspipeline')}>
+            Pipelines Status
+          </Button>
           <Button color="inherit" onClick={() => navigateTo('report')}>
             View Reports
           </Button>
@@ -70,6 +74,7 @@ function App() {
             setReportId={setReportId}
           />
         )}
+        {view === 'statuspipeline' && <StatusPipeline />}
         {view === 'report' && (
           <DownloadReport reportId={reportId} />
         )}

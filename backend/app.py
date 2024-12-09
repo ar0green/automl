@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from src.pipeline import run_pipeline
@@ -13,11 +13,12 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from src.database import SessionLocal
 from src.models import Report
-
+import pandas as pd
 
 app = FastAPI(title="AutoML Service")
 
 Base.metadata.create_all(bind=engine)
+
 
 class PipelineParams(BaseModel):
     target_column: str
@@ -28,12 +29,14 @@ class PipelineParams(BaseModel):
 
 tasks_status = {}
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 @app.post("/upload_data")
 async def upload_data(file: UploadFile = File(...)):
@@ -43,6 +46,67 @@ async def upload_data(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, file_object)
     return {"file_id": file_id, "filename": file.filename}
 
+
+@app.get("/list_datasets")
+def list_datasets():
+    datasets = []
+    data_dir = 'data'
+
+    if os.path.exists(data_dir):
+        for f in os.listdir(data_dir):
+            if '_' in f:
+                parts = f.split('_', 1)
+                if len(parts) == 2:
+                    file_id, filename = parts
+                    datasets.append({"file_id": file_id, "filename": filename})
+
+    return {"datasets": datasets}
+
+
+@app.get("/get_dataset_info")
+def get_dataset_info(file_id: str):
+
+    data_dir = 'data'
+    if not os.path.exists(data_dir):
+        raise HTTPException(status_code=404, detail="Data directory not found")
+    matched_files = []
+    for f in os.listdir(data_dir):
+        if f.startswith(file_id + "_"):
+            matched_files.append(f)
+
+    if not matched_files:
+        raise HTTPException(
+            status_code=404, detail="File not found for given file_id")
+
+    print(matched_files)
+    filename = matched_files[0]
+
+    full_path = os.path.join(data_dir, filename)
+    print(filename)
+    try:
+        df = pd.read_csv(full_path, nrows=0)
+        columns = list(df.columns)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to read file: {str(e)}")
+
+    return {"columns": columns}
+
+
+@app.get("/list_pipelines")
+def list_pipelines(db: Session = Depends(get_db)):
+    reports = db.query(Report).all()
+    pipelines = []
+    for r in reports:
+        pipelines.append({
+            "task_id": r.task_id,
+            "report_id": r.report_id,
+            "status": r.status,
+            "dataset_name": r.dataset_name,
+            "model_name": r.model_name,
+            "created_at": r.created_at.isoformat() if r.created_at else None
+        })
+    return {"pipelines": pipelines}
 
 @app.post("/run_pipeline/{file_id}")
 async def run_pipeline_endpoint(
@@ -61,7 +125,7 @@ async def run_pipeline_endpoint(
     task_id = str(uuid.uuid4())
     report_id = str(uuid.uuid4())
     tasks_status[task_id] = "Running"
-    
+
     new_report = Report(
         report_id=report_id,
         task_id=task_id,
@@ -108,7 +172,6 @@ def run_pipeline_task(data_path, params, task_id, report_id, db: Session):
         db.commit()
 
 
-
 @app.get("/task_status/{task_id}")
 def get_task_status(task_id: str, db: Session = Depends(get_db)):
     report = db.query(Report).filter(Report.task_id == task_id).first()
@@ -131,4 +194,3 @@ def download_report(report_id: str, db: Session = Depends(get_db)):
         }
     else:
         return {"error": "Report not found"}
-
