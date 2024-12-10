@@ -52,18 +52,8 @@ AutoMLPipeline/
 │  └─ ...
 ├─ frontend/
 │  ├─ Dockerfile
-│  ├─ src/
-│  │  ├─ components/
-│  │  │  ├─ UploadData.js
-│  │  │  ├─ PipelineForm.js
-│  │  │  ├─ TaskStatus.js
-│  │  │  ├─ DownloadReport.js
-│  │  │  ├─ ApplyModel.js
-│  │  │  ├─ StatusPipeline.js
-│  │  ├─ App.js
-│  │  ├─ index.js
-│  ├─ public/
-│  ├─ package.json
+│  ├─ app.py                  # Frontend using Streamlit
+|  ├─ requirements.txt
 │  └─ ...
 ├─ docker-compose.yml
 └─ README.md
@@ -93,13 +83,13 @@ AutoMLPipeline/
     This will start the following services:
 
         backend on port 8000
-        frontend on port 3000
+        frontend on port 8501
         mlflow on port 5000
         db (PostgreSQL) on port 5432
 
 3. **Open the web interface:**
     
-    Go to http://localhost:3000 in your browser.
+    Go to http://localhost:8501 in your browser.
 
 ## **UI Pages**
 
@@ -111,13 +101,14 @@ AutoMLPipeline/
 
 ## **UI Pages**
 
-- **/api/upload_data(POST)**: Upload a dataset.
-- **/api/list_datasets (GET)**: List all uploaded datasets.
-- **/api/get_dataset_info?file_id={file_id} (GET)**: Retrieve dataset columns.
-- **/api/run_pipeline/{file_id} (POST)**: Run the pipeline for the specified dataset.
-- **/api/task_status/{task_id} (GET)**: Get the status of a specific pipeline.
-- **/api/download_report/{report_id} (GET)**: Retrieve the report for a completed pipeline.
-- **/api/list_pipelines (GET)**: List all pipelines and their statuses.
+- **/upload_data(POST)**: Upload a dataset.
+- **/list_datasets (GET)**: List all uploaded datasets.
+- **/get_dataset_info?file_id={file_id} (GET)**: Retrieve dataset columns.
+- **/run_pipeline/{file_id} (POST)**: Run the pipeline for the specified dataset.
+- **/task_status/{task_id} (GET)**: Get the status of a specific pipeline.
+- **/download_report/{report_id} (GET)**: Retrieve the report for a completed pipeline.
+- **/list_pipelines (GET)**: List all pipelines and their statuses.
+- **/preditc (POST)**: To predict using trained models.
 
 ## **Database**
 

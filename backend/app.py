@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from src.pipeline import run_pipeline
@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 from src.database import SessionLocal
 from src.models import Report
 import pandas as pd
+import numpy as np
+import mlflow
 
 app = FastAPI(title="AutoML Service")
 
@@ -25,6 +27,11 @@ class PipelineParams(BaseModel):
     task_type: str = 'classification'
     sep: str = ','
     dataset_name: str = 'dataset'
+
+class InputData(BaseModel):
+    features: list
+    model_name: str = Query(..., description="Имя модели для предсказания")
+    task_type: str = Query('classification', description="Тип задачи: classification или regression")
 
 
 tasks_status = {}
@@ -171,6 +178,23 @@ def run_pipeline_task(data_path, params, task_id, report_id, db: Session):
         report.status = f"Error: {str(e)}"
         db.commit()
 
+@app.post("/predict")
+def predict(data: InputData):
+    model_path = f'models/{data.model_name}'
+    if not os.path.exists(model_path):
+        return {"error": "Model not found."}
+
+    model = mlflow.sklearn.load_model(model_path)
+
+    input_array = np.array(data.features).reshape(1, -1)
+    prediction = model.predict(input_array)
+
+    if data.task_type == 'classification':
+        prediction = prediction.astype(int).tolist()
+    else:
+        prediction = prediction.tolist()
+
+    return {"prediction": prediction}
 
 @app.get("/task_status/{task_id}")
 def get_task_status(task_id: str, db: Session = Depends(get_db)):
