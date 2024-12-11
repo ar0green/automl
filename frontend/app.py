@@ -128,7 +128,7 @@ def apply_model_page():
     mode = st.radio("Input Mode", ["Upload File", "Enter JSON"])
 
     if mode == "Upload File":
-        uploaded_file = st.file_uploader("Upload new data for prediction", type=["csv"])
+        uploaded_file = st.file_uploader("Upload new data for prediction", type=["json"])
         if uploaded_file and st.button("Get Predictions"):
             files = {'file': (uploaded_file.name, uploaded_file, 'text/csv')}
             data = {'report_id': report_id}
