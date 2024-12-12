@@ -68,7 +68,7 @@ def configure_pipeline_page():
     else:
         st.error("Failed to load datasets list.")
 
-@st.fragment(run_every='10s')
+@st.fragment()
 def pipelines_status_page():
     st.title("Pipelines Status")
 
