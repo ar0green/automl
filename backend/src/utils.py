@@ -8,6 +8,7 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 
 
 def load_data(file_path, column_names=None, sep=','):
+    # data = pd.read_parquet(file_path) if 'parquet' in file_path.name else pd.read_csv(file_path, sep=sep) 
     data = pd.read_csv(file_path, sep=sep)
 
     if column_names is not None:
