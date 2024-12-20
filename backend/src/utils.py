@@ -8,8 +8,8 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 
 
 def load_data(file_path, column_names=None, sep=','):
-    # data = pd.read_parquet(file_path) if 'parquet' in file_path.name else pd.read_csv(file_path, sep=sep) 
-    data = pd.read_csv(file_path, sep=sep)
+    data = pd.read_parquet(file_path) if 'parquet' in file_path else pd.read_csv(file_path, sep=sep) 
+    # data = pd.read_csv(file_path, sep=sep)
 
     if column_names is not None:
         data.columns = column_names
@@ -20,6 +20,7 @@ def load_data(file_path, column_names=None, sep=','):
 
 
 def preprocess_data(data, target_column):
+    print(data)
     X = data.drop(target_column, axis=1)
     y = data[target_column]
 
@@ -30,6 +31,8 @@ def preprocess_data(data, target_column):
     if y.dtype == 'object':
         le = LabelEncoder()
         y = le.fit_transform(y.astype(str))
+        
+    print(y)
 
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, random_state=42

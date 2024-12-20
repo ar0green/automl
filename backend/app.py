@@ -91,7 +91,8 @@ def get_dataset_info(file_id: str):
     full_path = os.path.join(data_dir, filename)
     print(filename)
     try:
-        df = pd.read_csv(full_path, nrows=0)
+        df = pd.read_parquet(full_path) if 'parquet' in full_path else pd.read_csv(full_path, snrows=0) 
+        # df = pd.read_csv(full_path, nrows=0)
         columns = list(df.columns)
     except Exception as e:
         raise HTTPException(

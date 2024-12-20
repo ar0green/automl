@@ -6,7 +6,7 @@ API_BASE = "http://backend:8000/"
 
 def upload_data_page():
     st.title("Upload Data")
-    uploaded_file = st.file_uploader("Choose a file", type=["csv"])
+    uploaded_file = st.file_uploader("Choose a file", type=["csv", "parquet"])
     if uploaded_file is not None:
         if st.button("Upload"):
             files = {'file': (uploaded_file.name, uploaded_file, 'text/csv')}
