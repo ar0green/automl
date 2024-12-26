@@ -2,6 +2,7 @@ __pycache__
 mlruns
 .vscode
 models/
+backend/src/reports
 
 mlflow.db
 backend/data/0825320f-f111-41c2-aecd-236836eb7e2a_boston.csv
